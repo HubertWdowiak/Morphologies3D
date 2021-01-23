@@ -1,3 +1,4 @@
+import numpy as np
 from PyQt5 import QtGui
 from PyQt5.QtWidgets import QInputDialog, QLineEdit, QFileDialog, QSlider
 from PyQt5.QtCore import Qt, QSize
@@ -26,10 +27,7 @@ class Application(object):
 
         self.slider = QSlider(Qt.Horizontal)
 
-        self.graph = pg.PlotWidget()
-        hour = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-        temperature = [30, 32, 34, 32, 33, 31, 29, 32, 35, 45]
-        self.graph.plot(hour, temperature)
+        self.image = QtGui.QLabel()
 
         self.init()
 
@@ -61,11 +59,12 @@ class Application(object):
         self.slider.setMinimum(1)
         self.slider.setMaximum(60)
 
+        self.image.setStyleSheet("border: 1px solid black;")
 
         # main layout
         self.layout.addLayout(self.buttons_layout, 0, 0)
         self.layout.addLayout(self.files_layout, 1, 0)
-        self.layout.addWidget(self.graph, 0, 1, 5, 6)
+        self.layout.addWidget(self.image, 0, 1, 5, 6)
         self.layout.addWidget(self.slider, 5, 1, 1, 6, Qt.AlignTop)
 
         self.connect_buttons()
@@ -79,15 +78,19 @@ class Application(object):
     def load_file_dialog(self):
         options = QFileDialog.Options()
         file_name, _ = QFileDialog.getOpenFileName(self.window, "Load image from disk", "",
-                                                  "Pickle files(.pickle*);;CSV (*.csv)", options=options)
+                                                  "Pickle files(*.npy);;CSV (*.csv)", options=options)
         if file_name:
-            print(file_name)
+            with open(file_name, 'rb') as file:
+                data = np.load(file)
+                print(data.max())
+                qimage = QtGui.QImage(data, data.shape[0], data.shape[1], QtGui.QImage.Format_Grayscale8)
+                self.image.setPixmap(QtGui.QPixmap(qimage))
 
 
     def save_file_dialog(self):
         options = QFileDialog.Options()
         file_name, _ = QFileDialog.getSaveFileName(self.window, "Save image on disk", "",
-                                                  "Pickle files(.pickle*);;CSV (*.csv)", options=options)
+                                                  "Pickle files(.npy*);;CSV (*.csv)", options=options)
         if file_name:
             print(file_name)
 
