@@ -30,9 +30,9 @@ class Image3d:
             'mean': th.threshold_mean,
             'yen': th.threshold_yen
         }
-
-        thresh = names[threshold_name](self.images)
-        self.images_modified = self.images > thresh
+        if self.images is not None:
+            thresh = names[threshold_name](self.images)
+            self.images_modified = self.images > thresh
 
     def morph(self, func):
         new_images = []
