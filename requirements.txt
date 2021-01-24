@@ -1,0 +1,6 @@
+numpy
+matplotlib
+scikit-image
+pyqt5
+pyqtgraph
+pooch
