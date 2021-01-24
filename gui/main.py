@@ -33,6 +33,8 @@ class Application(object):
         self.figure = plt.figure()
         self.canvas = FigureCanvas(self.figure)
 
+        self.data = None
+
         self.init()
 
 
@@ -63,19 +65,20 @@ class Application(object):
         self.slider.setMinimum(1)
         self.slider.setMaximum(60)
 
-
         # main layout
         self.layout.addLayout(self.buttons_layout, 0, 0)
         self.layout.addLayout(self.files_layout, 1, 0)
         self.layout.addWidget(self.canvas, 0, 1, 5, 6)
         self.layout.addWidget(self.slider, 5, 1, 1, 6, Qt.AlignTop)
 
-        self.connect_buttons()
+        self.connect_widgets()
 
 
-    def connect_buttons(self):
+    def connect_widgets(self):
         self.button_save.clicked.connect(self.save_file_dialog)
         self.button_load.clicked.connect(self.load_file_dialog)
+        self.slider.valueChanged.connect(self.update_image)
+
 
 
     def load_file_dialog(self):
@@ -84,8 +87,9 @@ class Application(object):
                                                   "Pickle files(*.npy);;CSV (*.csv)", options=options)
         if file_name:
             with open(file_name, 'rb') as file:
-                data = np.load(file)
-                self.show_image(data)
+                self.data = np.load(file)
+                self.slider.setMaximum(self.data.shape[0] - 1)
+                self.update_image()
 
 
     def save_file_dialog(self):
@@ -101,10 +105,12 @@ class Application(object):
     def close(self):
         self.app.exec_()
 
-    def show_image(self, data):
+    def update_image(self):
+        index = self.slider.value()
         self.figure.clear()
         ax = self.figure.add_subplot(111)
-        ax.imshow(data)
+
+        ax.imshow(self.data[index])
         self.canvas.draw()
 
 
