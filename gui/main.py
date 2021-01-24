@@ -7,6 +7,7 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 import pyqtgraph as pg
 from model.image3d import Image3d
+from skimage.morphology import skeletonize_3d
 
 
 class Application(object):
@@ -22,9 +23,13 @@ class Application(object):
         self.button_dilation = QtGui.QPushButton('Dilation')
         self.button_opening = QtGui.QPushButton('Opening')
         self.button_closing = QtGui.QPushButton('Closing')
+        self.button_skeleton = QtGui.QPushButton('Skeletonize')
+        self.button_watershed = QtGui.QPushButton('Watershed')
+
         self.binarization_label = QtGui.QLabel("Binarization method", self.window)
         self.binarization_combo = QtGui.QComboBox(self.window)
         self.button_apply = QtGui.QPushButton('Apply')
+        self.button_revert = QtGui.QPushButton('Revert')
 
         self.files_layout = QtGui.QVBoxLayout()
         self.files_label = QtGui.QLabel("Open/Save files", self.window)
@@ -61,13 +66,18 @@ class Application(object):
         self.buttons_layout.addWidget(self.button_dilation)
         self.buttons_layout.addWidget(self.button_opening)
         self.buttons_layout.addWidget(self.button_closing)
+        self.buttons_layout.addWidget(self.button_skeleton)
         self.buttons_layout.addWidget(self.binarization_label)
         self.buttons_layout.addWidget(self.binarization_combo)
+        self.buttons_layout.addWidget(self.button_watershed)
+        self.buttons_layout.addWidget(self.button_revert)
 
+        self.binarization_combo.addItem("None")
         self.binarization_combo.addItem("otsu")
         self.binarization_combo.addItem("li")
         self.binarization_combo.addItem("mean")
         self.binarization_combo.addItem("yen")
+
         self.buttons_layout.addWidget(self.button_apply)
 
         self.files_layout.addWidget(self.files_label)
@@ -95,8 +105,30 @@ class Application(object):
         self.button_save.clicked.connect(self.save_file_dialog)
         self.button_load.clicked.connect(self.load_file_dialog)
 
+        self.button_skeleton.clicked.connect(lambda: self.image3d.morph('skeletonize'))
+        self.button_skeleton.clicked.connect(self.update_image)
+
+        self.button_dilation.clicked.connect(lambda: self.image3d.morph('dilation'))
+        self.button_dilation.clicked.connect(self.update_image)
+
+        self.button_erosion.clicked.connect(lambda: self.image3d.morph('erosion'))
+        self.button_erosion.clicked.connect(self.update_image)
+
+        self.button_opening.clicked.connect(lambda: self.image3d.morph('open'))
+        self.button_opening.clicked.connect(self.update_image)
+
+        self.button_closing.clicked.connect(lambda: self.image3d.morph('close'))
+        self.button_closing.clicked.connect(self.update_image)
+
+        self.button_watershed.clicked.connect(lambda: self.image3d.morph('watershed'))
+        self.button_watershed.clicked.connect(self.update_image)
+
+        self.button_revert.clicked.connect(self.image3d.revert)
+        self.button_revert.clicked.connect(self.update_image)
+
         self.button_apply.clicked.connect(self.image3d.apply)
         self.button_apply.clicked.connect(self.update_image)
+
         self.binarization_combo.currentTextChanged.connect(
             lambda: self.image3d.binarize(self.binarization_combo.currentText())
         )
@@ -152,18 +184,22 @@ class Application(object):
         self.ax_bottom_3d = self.figure.add_subplot(2, 3, 6)
 
         self.ax_top_1d.axis("off")
-        self.ax_top_1d.set_title("Plane(x, y) before apply")
         self.ax_top_2d.axis("off")
-        self.ax_top_2d.set_title("Plane(z, y) before apply")
         self.ax_top_3d.axis("off")
-        self.ax_top_3d.set_title("Plane(z, x) before apply")
+
+        if self.image3d.images is not None:
+            self.ax_top_1d.set_title("Plane(x, y) before apply")
+            self.ax_top_2d.set_title("Plane(z, y) before apply")
+            self.ax_top_3d.set_title("Plane(z, x) before apply")
 
         self.ax_bottom_1d.axis("off")
-        self.ax_bottom_1d.set_title("Plane(x, y) after apply")
         self.ax_bottom_2d.axis("off")
-        self.ax_bottom_2d.set_title("Plane(z, y) after apply")
         self.ax_bottom_3d.axis("off")
-        self.ax_bottom_3d.set_title("Plane(z, x) after apply")
+
+        if self.image3d.images_modified is not None:
+            self.ax_bottom_1d.set_title("Plane(x, y) after apply")
+            self.ax_bottom_2d.set_title("Plane(z, y) after apply")
+            self.ax_bottom_3d.set_title("Plane(z, x) after apply")
 
 
 app = Application()
