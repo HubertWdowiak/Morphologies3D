@@ -32,8 +32,14 @@ class Application(object):
 
         self.figure = plt.figure()
         self.canvas = FigureCanvas(self.figure)
+        self.ax_top_1d = self.figure.add_subplot(2, 3, 1)
+        self.ax_top_2d = self.figure.add_subplot(2, 3, 2)
+        self.ax_top_3d = self.figure.add_subplot(2, 3, 3)
+        self.ax_bottom_1d = self.figure.add_subplot(2, 3, 4)
+        self.ax_bottom_2d = self.figure.add_subplot(2, 3, 5)
+        self.ax_bottom_3d = self.figure.add_subplot(2, 3, 6)
 
-        self.data = None
+        self.data = np.ndarray([0])
 
         self.init()
 
@@ -65,6 +71,15 @@ class Application(object):
         self.slider.setMinimum(1)
         self.slider.setMaximum(60)
 
+        self.ax_top_1d.axis("off")
+        self.ax_top_2d.axis("off")
+        self.ax_top_3d.axis("off")
+
+        self.ax_bottom_1d.axis("off")
+        self.ax_bottom_2d.axis("off")
+        self.ax_bottom_3d.axis("off")
+
+
         # main layout
         self.layout.addLayout(self.buttons_layout, 0, 0)
         self.layout.addLayout(self.files_layout, 1, 0)
@@ -84,7 +99,7 @@ class Application(object):
     def load_file_dialog(self):
         options = QFileDialog.Options()
         file_name, _ = QFileDialog.getOpenFileName(self.window, "Load image from disk", "",
-                                                  "Pickle files(*.npy);;CSV (*.csv)", options=options)
+                                                  "Numpy arrays(*.npy)", options=options)
         if file_name:
             with open(file_name, 'rb') as file:
                 self.data = np.load(file)
@@ -95,9 +110,10 @@ class Application(object):
     def save_file_dialog(self):
         options = QFileDialog.Options()
         file_name, _ = QFileDialog.getSaveFileName(self.window, "Save image on disk", "",
-                                                  "Pickle files(.npy*);;CSV (*.csv)", options=options)
+                                                  "Numpy arrays(.npy*)", options=options)
         if file_name:
-            print(file_name)
+            with open(file_name, 'wb') as file:
+                self.data = np.save(file, self.data)
 
     def show(self):
         self.window.show()
@@ -107,11 +123,16 @@ class Application(object):
 
     def update_image(self):
         index = self.slider.value()
-        self.figure.clear()
-        ax = self.figure.add_subplot(111)
+        if self.data.any():
+            self.ax_top_1d.imshow(self.data[index, :, :])
+            self.ax_top_2d.imshow(self.data[:, index, :])
+            self.ax_top_3d.imshow(self.data[:, :, index])
+            self.ax_bottom_1d.imshow(self.data[index, :, :])
+            self.ax_bottom_2d.imshow(self.data[:, index, :])
+            self.ax_bottom_3d.imshow(self.data[:, :, index])
 
-        ax.imshow(self.data[index])
-        self.canvas.draw()
+
+            self.canvas.draw()
 
 
 app = Application()
