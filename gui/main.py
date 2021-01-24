@@ -6,6 +6,8 @@ from PyQt5.QtCore import Qt, QSize
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 import pyqtgraph as pg
+from model.image3d import Image3d
+
 
 class Application(object):
     def __init__(self):
@@ -41,9 +43,9 @@ class Application(object):
         self.ax_bottom_2d = None
         self.ax_bottom_3d = None
 
-        self.data = np.ndarray([0])
-        self.init()
+        self.image3d = Image3d()
 
+        self.init()
 
     def init(self):
         # window setup
@@ -87,28 +89,31 @@ class Application(object):
 
         self.connect_widgets()
 
+    def temp(self):
+        self.image3d.binarize('otsu')
+        self.image3d.apply()
+        self.update_image()
 
     def connect_widgets(self):
         self.button_save.clicked.connect(self.save_file_dialog)
         self.button_load.clicked.connect(self.load_file_dialog)
+        self.button_closing.clicked.connect(self.temp)
         self.slider.valueChanged.connect(self.update_image)
-
 
     def load_file_dialog(self):
         options = QFileDialog.Options()
         file_name, _ = QFileDialog.getOpenFileName(self.window, "Load image from disk", "",
-                                                  "Numpy arrays(*.npy)", options=options)
+                                                   "Pickle files(*.npy);;CSV (*.csv)", options=options)
         if file_name:
             with open(file_name, 'rb') as file:
-                self.data = np.load(file)
-                self.slider.setMaximum(self.data.shape[0] - 1)
+                self.image3d.load_data(np.load(file))
+                self.slider.setMaximum(self.image3d.images.shape[0] - 1)
                 self.update_image()
-
 
     def save_file_dialog(self):
         options = QFileDialog.Options()
         file_name, _ = QFileDialog.getSaveFileName(self.window, "Save image on disk", "",
-                                                  "Numpy arrays(.npy*)", options=options)
+                                                   "Pickle files(.npy*);;CSV (*.csv)", options=options)
         if file_name:
             with open(file_name, 'wb') as file:
                 np.save(file, self.data)

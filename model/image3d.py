@@ -10,7 +10,13 @@ data = util.img_as_float(cells3d()[:, 1, :, :])
 
 class Image3d:
 
-    def __init__(self, data: np.array):
+    def __init__(self):
+        self.images = None
+        self.layers = None
+        self.imsize = None
+        self.images_modified = None
+
+    def load_data(self, data: np.array):
         self.images = data
         self.images_modified = None
         self.layers = len(data)
@@ -38,21 +44,3 @@ class Image3d:
         self.images = np.array(self.images_modified)
         self.images_modified = None
 
-
-def display(im3d, cmap="gray", step=2):
-    _, axes = plt.subplots(nrows=5, ncols=6, figsize=(16, 14))
-
-    for ax, image in zip(axes.flatten(), im3d[::step]):
-        ax.imshow(image, cmap=cmap)
-        ax.set_xticks([])
-        ax.set_yticks([])
-
-
-
-im = Image3d(data)
-im.binarize('otsu')
-im.apply()
-display(im.images)
-im.morph(morphology.binary_erosion)
-display(im.images_modified)
-plt.show()
