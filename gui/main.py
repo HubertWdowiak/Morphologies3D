@@ -22,6 +22,9 @@ class Application(object):
         self.button_dilation = QtGui.QPushButton('Dilation')
         self.button_opening = QtGui.QPushButton('Opening')
         self.button_closing = QtGui.QPushButton('Closing')
+        self.button_binarize = QtGui.QPushButton('Binarize')
+        self.button_apply = QtGui.QPushButton('Apply')
+
 
         self.files_layout = QtGui.QVBoxLayout()
         self.files_label = QtGui.QLabel("Open/Save files", self.window)
@@ -58,6 +61,9 @@ class Application(object):
         self.buttons_layout.addWidget(self.button_dilation)
         self.buttons_layout.addWidget(self.button_opening)
         self.buttons_layout.addWidget(self.button_closing)
+        self.buttons_layout.addWidget(self.button_binarize)
+        self.buttons_layout.addWidget(self.button_apply)
+
 
         self.files_layout.addWidget(self.files_label)
         self.files_label.setAlignment(Qt.AlignBottom)
@@ -88,15 +94,18 @@ class Application(object):
 
         self.connect_widgets()
 
-    def temp(self):
-        self.image3d.binarize('otsu')
-        self.image3d.apply()
-        self.update_image()
-
     def connect_widgets(self):
         self.button_save.clicked.connect(self.save_file_dialog)
         self.button_load.clicked.connect(self.load_file_dialog)
-        self.button_closing.clicked.connect(self.temp)
+
+        self.button_apply.clicked.connect(self.image3d.apply)
+        self.button_apply.clicked.connect(self.update_image)
+
+        self.button_binarize.clicked.connect(lambda: self.image3d.binarize('otsu'))
+        self.button_binarize.clicked.connect(self.update_image)
+
+
+
         self.slider.valueChanged.connect(self.update_image)
 
     def load_file_dialog(self):
@@ -113,9 +122,6 @@ class Application(object):
         options = QFileDialog.Options()
         file_name, _ = QFileDialog.getSaveFileName(self.window, "Save image on disk", "",
                                                    "Pickle files(.npy*);;CSV (*.csv)", options=options)
-        if file_name:
-            with open(file_name, 'wb') as file:
-                self.data = np.save(file, self.data)
 
     def show(self):
         self.window.show()
@@ -125,16 +131,14 @@ class Application(object):
 
     def update_image(self):
         index = self.slider.value()
-        if self.data.any():
-            self.ax_top_1d.imshow(self.data[index, :, :])
-            self.ax_top_2d.imshow(self.data[:, index, :])
-            self.ax_top_3d.imshow(self.data[:, :, index])
-            self.ax_bottom_1d.imshow(self.data[index, :, :])
-            self.ax_bottom_2d.imshow(self.data[:, index, :])
-            self.ax_bottom_3d.imshow(self.data[:, :, index])
-
-
-            self.canvas.draw()
+        if self.image3d.images.any():
+            self.ax_top_1d.imshow(self.image3d.images[index, :, :])
+            self.ax_top_2d.imshow(self.image3d.images[:, index, :])
+            self.ax_top_3d.imshow(self.image3d.images[:, :, index])
+            if self.image3d.images_modified is not None:
+                self.ax_bottom_1d.imshow(self.image3d.images_modified[index, :, :])
+                self.ax_bottom_2d.imshow(self.image3d.images_modified[:, index, :])
+                self.ax_bottom_3d.imshow(self.image3d.images_modified[:, :, index])
 
 
 app = Application()

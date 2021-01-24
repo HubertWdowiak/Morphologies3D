@@ -41,6 +41,7 @@ class Image3d:
         self.images_modified = new_images
 
     def apply(self):
-        self.images = np.array(self.images_modified)
-        self.images_modified = None
+        if self.images_modified is not None:
+            self.images = np.array(self.images_modified)
+            self.images_modified = None
 
