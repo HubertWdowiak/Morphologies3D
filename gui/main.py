@@ -23,6 +23,7 @@ class Application(object):
         self.button_opening = QtGui.QPushButton('Opening')
         self.button_closing = QtGui.QPushButton('Closing')
         self.binarization_label = QtGui.QLabel("Binarization method", self.window)
+        self.button_binarize = QtGui.QPushButton('Binarize')
         self.binarization_combo = QtGui.QComboBox(self.window)
         self.button_apply = QtGui.QPushButton('Apply')
 
@@ -63,6 +64,8 @@ class Application(object):
         self.buttons_layout.addWidget(self.button_closing)
         self.buttons_layout.addWidget(self.binarization_label)
         self.buttons_layout.addWidget(self.binarization_combo)
+        self.buttons_layout.addWidget(self.button_binarize)
+
         self.binarization_combo.addItem("otsu")
         self.binarization_combo.addItem("li")
         self.binarization_combo.addItem("mean")
@@ -129,6 +132,7 @@ class Application(object):
         self.app.exec_()
 
     def update_image(self):
+        self.reset_figure()
         index = self.slider.value()
         if self.image3d.images.any():
             self.ax_top_1d.imshow(self.image3d.images[index, :, :])
