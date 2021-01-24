@@ -1,0 +1,119 @@
+import numpy as np
+import matplotlib.pyplot as plt
+from PyQt5 import QtGui
+from PyQt5.QtWidgets import QInputDialog, QLineEdit, QFileDialog, QSlider
+from PyQt5.QtCore import Qt, QSize
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
+import pyqtgraph as pg
+
+
+class Application(object):
+    def __init__(self):
+        self.app = QtGui.QApplication([])
+        self.window = QtGui.QWidget()
+        self.layout = QtGui.QGridLayout()
+
+        # operations
+        self.buttons_layout = QtGui.QVBoxLayout()
+        self.operations_label = QtGui.QLabel("Morph operations", self.window)
+        self.button_erosion = QtGui.QPushButton('Erosion')
+        self.button_dilation = QtGui.QPushButton('Dilation')
+        self.button_opening = QtGui.QPushButton('Opening')
+        self.button_closing = QtGui.QPushButton('Closing')
+
+        self.files_layout = QtGui.QVBoxLayout()
+        self.files_label = QtGui.QLabel("Open/Save files", self.window)
+        self.files_label.adjustSize()
+        self.button_save = QtGui.QPushButton('Save')
+        self.button_load = QtGui.QPushButton('Load')
+
+        self.slider = QSlider(Qt.Horizontal)
+
+        self.figure = plt.figure()
+        self.canvas = FigureCanvas(self.figure)
+
+        self.data = None
+
+        self.init()
+
+
+    def init(self):
+        # window setup
+        self.window.resize(1000, 800)
+        self.window.setWindowTitle('Morphologies 3D')
+        self.window.setLayout(self.layout)
+
+        # operations layout
+        self.operations_label.setAlignment(Qt.AlignBottom)
+        self.operations_label.adjustSize()
+        self.buttons_layout.addWidget(self.operations_label)
+        self.buttons_layout.addWidget(self.button_erosion)
+        self.buttons_layout.addWidget(self.button_dilation)
+        self.buttons_layout.addWidget(self.button_opening)
+        self.buttons_layout.addWidget(self.button_closing)
+
+        self.files_layout.addWidget(self.files_label)
+        self.files_label.setAlignment(Qt.AlignBottom)
+        self.files_layout.addWidget(self.button_save)
+        self.files_layout.addWidget(self.button_load)
+
+        self.slider.setFocusPolicy(Qt.StrongFocus)
+        self.slider.setTickPosition(QSlider.TicksBothSides)
+        self.slider.setTickInterval(1)
+        self.slider.setSingleStep(1)
+        self.slider.setMinimum(1)
+        self.slider.setMaximum(60)
+
+        # main layout
+        self.layout.addLayout(self.buttons_layout, 0, 0)
+        self.layout.addLayout(self.files_layout, 1, 0)
+        self.layout.addWidget(self.canvas, 0, 1, 5, 6)
+        self.layout.addWidget(self.slider, 5, 1, 1, 6, Qt.AlignTop)
+
+        self.connect_widgets()
+
+
+    def connect_widgets(self):
+        self.button_save.clicked.connect(self.save_file_dialog)
+        self.button_load.clicked.connect(self.load_file_dialog)
+        self.slider.valueChanged.connect(self.update_image)
+
+
+
+    def load_file_dialog(self):
+        options = QFileDialog.Options()
+        file_name, _ = QFileDialog.getOpenFileName(self.window, "Load image from disk", "",
+                                                  "Pickle files(*.npy);;CSV (*.csv)", options=options)
+        if file_name:
+            with open(file_name, 'rb') as file:
+                self.data = np.load(file)
+                self.slider.setMaximum(self.data.shape[0] - 1)
+                self.update_image()
+
+
+    def save_file_dialog(self):
+        options = QFileDialog.Options()
+        file_name, _ = QFileDialog.getSaveFileName(self.window, "Save image on disk", "",
+                                                  "Pickle files(.npy*);;CSV (*.csv)", options=options)
+        if file_name:
+            print(file_name)
+
+    def show(self):
+        self.window.show()
+
+    def close(self):
+        self.app.exec_()
+
+    def update_image(self):
+        index = self.slider.value()
+        self.figure.clear()
+        ax = self.figure.add_subplot(111)
+
+        ax.imshow(self.data[index])
+        self.canvas.draw()
+
+
+app = Application()
+app.show()
+app.close()
