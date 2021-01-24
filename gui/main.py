@@ -1,7 +1,10 @@
 import numpy as np
+import matplotlib.pyplot as plt
 from PyQt5 import QtGui
 from PyQt5.QtWidgets import QInputDialog, QLineEdit, QFileDialog, QSlider
 from PyQt5.QtCore import Qt, QSize
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 import pyqtgraph as pg
 
 
@@ -27,7 +30,8 @@ class Application(object):
 
         self.slider = QSlider(Qt.Horizontal)
 
-        self.image = QtGui.QLabel()
+        self.figure = plt.figure()
+        self.canvas = FigureCanvas(self.figure)
 
         self.init()
 
@@ -59,12 +63,11 @@ class Application(object):
         self.slider.setMinimum(1)
         self.slider.setMaximum(60)
 
-        self.image.setStyleSheet("border: 1px solid black;")
 
         # main layout
         self.layout.addLayout(self.buttons_layout, 0, 0)
         self.layout.addLayout(self.files_layout, 1, 0)
-        self.layout.addWidget(self.image, 0, 1, 5, 6)
+        self.layout.addWidget(self.canvas, 0, 1, 5, 6)
         self.layout.addWidget(self.slider, 5, 1, 1, 6, Qt.AlignTop)
 
         self.connect_buttons()
@@ -82,9 +85,7 @@ class Application(object):
         if file_name:
             with open(file_name, 'rb') as file:
                 data = np.load(file)
-                print(data.max())
-                qimage = QtGui.QImage(data, data.shape[0], data.shape[1], QtGui.QImage.Format_Grayscale8)
-                self.image.setPixmap(QtGui.QPixmap(qimage))
+                self.show_image(data)
 
 
     def save_file_dialog(self):
@@ -99,6 +100,12 @@ class Application(object):
 
     def close(self):
         self.app.exec_()
+
+    def show_image(self, data):
+        self.figure.clear()
+        ax = self.figure.add_subplot(111)
+        ax.imshow(data)
+        self.canvas.draw()
 
 
 app = Application()
