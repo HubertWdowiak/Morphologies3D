@@ -1,11 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
-from skimage import util
-from skimage.data import cells3d
 from skimage.filters import thresholding as th
 from skimage import morphology, segmentation
-
-data = util.img_as_float(cells3d()[:, 1, :, :])
 
 
 class Image3d:
